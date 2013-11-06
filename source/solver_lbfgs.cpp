@@ -122,9 +122,9 @@ void Solver::solve_lbfgs(const Function& function,
 		// Test stopping criteriea
 		//
 		start_time = wall_time();
-		if (this->check_exit_conditions(fval, fprev, normg,
-		                                normg0, x.norm(), normdx,
-		                                last_iteration_successful, results)) {
+		if (iter > 1 && this->check_exit_conditions(fval, fprev, normg,
+		                                            normg0, x.norm(), normdx,
+		                                            last_iteration_successful, results)) {
 			break;
 		}
 		if (iter >= this->maximum_iterations) {
