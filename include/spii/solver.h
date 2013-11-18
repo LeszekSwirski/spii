@@ -29,6 +29,7 @@ struct SPII_API SolverResults
 	      NO_CONVERGENCE,     // Maximum number of iterations reached.
 	      FUNCTION_NAN,       // Nan encountered.
 	      FUNCTION_INFINITY,  // Infinity encountered.
+		  USER_ABORT,         // The callback function aborted the optimization.
 	      INTERNAL_ERROR,     // Internal error.
 	      NA} exit_condition;
 
@@ -59,6 +60,24 @@ struct SPII_API SolverResults
 
 SPII_API std::ostream& operator<<(std::ostream& out, const SolverResults& results);
 
+// Holds information provided by the solver via a
+// callback function. 
+//
+// Note: All pointers in the struct may be
+//       nullptr, depending on the solver.
+struct CallbackInformation
+{
+	double objective_value = std::numeric_limits<double>::quiet_NaN();
+	// The currently evaluated point.
+	const Eigen::VectorXd* x        = nullptr;
+	// The gradient at x.
+	const Eigen::VectorXd* g        = nullptr;
+	// The dense Hessian at x.
+	const Eigen::MatrixXd* H_dense  = nullptr;
+	// The sparse Hessian at x.
+	const Eigen::SparseMatrix<double>* H_sparse = nullptr; 
+};
+
 struct FactorizationCacheInternal;
 class FactorizationCache
 {
@@ -70,6 +89,7 @@ public:
 
 #ifdef _WIN32
 	SPII_API_EXTERN_TEMPLATE template class SPII_API std::function<void(const std::string&)>;
+	SPII_API_EXTERN_TEMPLATE template class SPII_API std::function<bool(const CallbackInformation&)>;
 #endif
 
 class SPII_API Solver
@@ -127,9 +147,14 @@ public:
 	// Default: AUTO.
 	enum {DENSE, SPARSE, AUTO} sparsity_mode;
 
-	// Function called each iteration with a log message.
+	// Function called every time the solver emits a log message.
 	// Default: print to std::cerr.
 	std::function<void(const std::string& log_message)> log_function;
+
+	// Function called each iteration.
+	// If the function returns false, the solver should abort the optimization.
+	// Default: none.
+	std::function<bool(const CallbackInformation& information)> callback_function;
 
 	// Maximum number of iterations. Default: 100.
 	int maximum_iterations;
