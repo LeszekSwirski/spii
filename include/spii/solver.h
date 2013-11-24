@@ -191,11 +191,23 @@ public:
 	// Default: 1e-6.
 	double lbfgs_restart_tolerance;
 
-	// The line search is completed when
+	enum {ARMIJO, WOLFE} line_search_type = ARMIJO;
+
+	// The Armijo line search is completed when
+	//
 	//   f(x + alpha * p) <= f(x) + c * alpha * gTp.
-	// In each iteration, alpha *= rho.
+	//
+	// This condition is also part of Wolfe line search.
 	double line_search_c;    // default: 1e-4.
+
+	// In each Armijo iteration, alpha *= rho.
 	double line_search_rho;  // default: 0.5.
+
+	// The Wolfe conditions are
+	//
+	// |g_newTp| <= -c2 * gTp
+	//
+	double line_search_c2 = 0.9;
 
 	// The default factorization method is the BKP block
 	// diagonal modification (Nocedal and Wright, p. 55).
